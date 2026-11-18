@@ -1,0 +1,50 @@
+# Cloudflare Worker for the shared ratings. Deploy: npx wrangler deploy (see README.md).
+name = "sleaze-detector"
+main = "src/index.ts"
+compatibility_date = "2025-06-01"
+
+# The database. database_id is filled in by "wrangler d1 create" (it is not a secret).
+[[d1_databases]]
+binding = "DB"
+database_name = "sleaze-detector"
+database_id = "59add88c-971a-47f9-b09c-cba00b44f183"
+migrations_dir = "migrations"
+
+# Requests per IP address per minute, checked before any database work.
+[[ratelimits]]
+name = "WRITE_LIMIT"
+namespace_id = "1001"
+simple = { limit = 20, period = 60 }
+
+[[ratelimits]]
+name = "READ_LIMIT"
+namespace_id = "1002"
+simple = { limit = 120, period = 60 }
+
+# Publish the daily totals snapshot and clear expired sign-ins (04:00 UTC).
+[triggers]
+crons = ["0 4 * * *"]
+
+[vars]
+# How many people a rating counts as. 5 matches the app's "fully red / fully green at 5" (Scoring.FullAt), so one
+# admin rating pins the meter on its own.
+WEIGHT_TRUSTED = "3"
+WEIGHT_ADMIN = "5"
+SEVERE_BONUS = "0.5"
+ROOK_WEIGHT = "2"
+# Rating categories (flag ids), matching src/SleazeDetector/Reputation/RatingCategories.cs in the app. Flags not
+# listed here are dropped from new ratings. Severe flags add SEVERE_BONUS to a bad rating's weight.
+BAD_FLAGS = "backstab,toxic,rook_on_rook,dc_early"
+GOOD_FLAGS = "kept_word,friendly,nice_to_rook"
+SEVERE_FLAGS = "backstab"
+# Ratings one account may submit per hour / per day.
+MAX_PER_HOUR = "30"
+MAX_PER_DAY = "200"
+# Where the daily totals snapshot goes ("owner/repo", path). Empty: no snapshot.
+SNAPSHOT_REPO = ""
+SNAPSHOT_PATH = "scores.json"
+
+# Secrets, set with "npx wrangler secret put NAME" (never in this file):
+#   ADMIN_STEAM_ID  SteamID64 of the owner: always admin, cannot be banned or demoted
+#   STEAM_API_KEY   optional: Steam display names in the admin panel
+#   GITHUB_TOKEN    write access to SNAPSHOT_REPO only

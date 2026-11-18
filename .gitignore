@@ -1,0 +1,10 @@
+bin/
+obj/
+publish/
+*.user
+.vs/
+Releases/
+
+# Name crops cut from personal recordings (training data, other players' names): kept local.
+data/
+__pycache__/

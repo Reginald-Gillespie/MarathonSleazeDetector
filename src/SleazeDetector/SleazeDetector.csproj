@@ -1,0 +1,66 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <!-- 10.0.19041 gives us Windows.Media.Ocr (built into Windows 10/11, no extra downloads). -->
+    <TargetFramework>net9.0-windows10.0.19041.0</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>SleazeDetector</AssemblyName>
+    <RootNamespace>SleazeDetector</RootNamespace>
+    <Product>Marathon Sleaze Detector</Product>
+    <Version>0.9.0</Version>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
+    <!-- Program.Main (Velopack's hooks must run before WPF starts), not the Main generated from App.xaml. -->
+    <StartupObject>SleazeDetector.Program</StartupObject>
+  </PropertyGroup>
+
+  <!-- Release publishing: one self-contained exe, nothing for the user to install. -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <DebugType>none</DebugType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\app.ico" />
+    <EmbeddedResource Include="Assets\glyphs.bin" Condition="Exists('Assets\glyphs.bin')" LogicalName="SleazeDetector.Assets.glyphs.bin" />
+    <!-- Learned name reader (tools/namereader). -->
+    <EmbeddedResource Include="Assets\namenet.onnx" Condition="Exists('Assets\namenet.onnx')" LogicalName="SleazeDetector.Assets.namenet.onnx" />
+    <EmbeddedResource Include="Assets\shells.bin" Condition="Exists('Assets\shells.bin')" LogicalName="SleazeDetector.Assets.shells.bin" />
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
+    <Using Include="System.IO" />
+  </ItemGroup>
+
+  <!-- ONNX Runtime ships native libraries for every platform (Android, iOS, Linux, macOS, ARM); this app only runs on
+       64- and 32-bit Windows, so the rest never goes into the output. -->
+  <Target Name="KeepWindowsNativeOnly" AfterTargets="ResolvePackageAssets">
+    <ItemGroup>
+      <RuntimeTargetsCopyLocalItems Remove="@(RuntimeTargetsCopyLocalItems)"
+        Condition="'%(RuntimeTargetsCopyLocalItems.RuntimeIdentifier)' != 'win-x64' And '%(RuntimeTargetsCopyLocalItems.RuntimeIdentifier)' != 'win-x86'" />
+    </ItemGroup>
+  </Target>
+
+  <!-- Ask the garbage collector to compact and return memory more readily (the app allocates large capture and
+       OCR buffers). -->
+  <ItemGroup>
+    <RuntimeHostConfigurationOption Include="System.GC.ConserveMemory" Value="5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.20.1" />
+    <PackageReference Include="System.Numerics.Tensors" Version="9.0.0" />
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="9.0.0" />
+    <PackageReference Include="Velopack" Version="1.2.161" />
+    <PackageReference Include="Vortice.Direct3D11" Version="3.8.3" />
+  </ItemGroup>
+
+</Project>

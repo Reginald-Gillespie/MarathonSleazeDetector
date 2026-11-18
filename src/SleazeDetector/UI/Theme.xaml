@@ -1,0 +1,164 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <FontFamily x:Key="MonoFont">Cascadia Mono, Consolas, Courier New</FontFamily>
+    <FontFamily x:Key="UiFont">Segoe UI Variable Text, Segoe UI</FontFamily>
+
+    <SolidColorBrush x:Key="Bg" Color="#F0101217" />
+    <SolidColorBrush x:Key="Panel" Color="#FF181B22" />
+    <SolidColorBrush x:Key="PanelHi" Color="#FF20242D" />
+    <SolidColorBrush x:Key="Line" Color="#FF2C313C" />
+    <SolidColorBrush x:Key="Fg" Color="#FFE8EAF0" />
+    <SolidColorBrush x:Key="FgDim" Color="#FF8B92A3" />
+    <SolidColorBrush x:Key="Accent" Color="#FFC6F432" />
+    <SolidColorBrush x:Key="Good" Color="#FF46A758" />
+    <SolidColorBrush x:Key="Bad" Color="#FFE5484D" />
+    <SolidColorBrush x:Key="Warn" Color="#FFFFC53D" />
+
+    <Style TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource Fg}" />
+        <Setter Property="FontFamily" Value="{StaticResource UiFont}" />
+    </Style>
+
+    <Style x:Key="Label" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource FgDim}" />
+        <Setter Property="FontFamily" Value="{StaticResource UiFont}" />
+        <Setter Property="FontSize" Value="11" />
+    </Style>
+
+    <Style x:Key="BaseButton" TargetType="Button">
+        <Setter Property="Foreground" Value="{StaticResource Fg}" />
+        <Setter Property="Background" Value="{StaticResource PanelHi}" />
+        <Setter Property="BorderBrush" Value="{StaticResource Line}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Padding" Value="12,6" />
+        <Setter Property="FontFamily" Value="{StaticResource UiFont}" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="B" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="0" Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" TextElement.Foreground="{TemplateBinding Foreground}">
+                            <ContentPresenter.Resources>
+                                <!-- Empty style: stops the app-wide TextBlock style from overriding the button text colour. -->
+                                <Style TargetType="TextBlock" />
+                            </ContentPresenter.Resources>
+                        </ContentPresenter>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="B" Property="BorderBrush" Value="{StaticResource FgDim}" />
+                        </Trigger>
+                        <Trigger Property="IsKeyboardFocused" Value="True">
+                            <Setter TargetName="B" Property="BorderBrush" Value="{StaticResource Accent}" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.4" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style TargetType="Button" BasedOn="{StaticResource BaseButton}" />
+
+    <!-- High-contrast block: near-black text on off-white. -->
+    <Style x:Key="PrimaryButton" TargetType="Button" BasedOn="{StaticResource BaseButton}">
+        <Setter Property="Background" Value="#FFE8EAF0" />
+        <Setter Property="Foreground" Value="#FF0B0C10" />
+        <Setter Property="BorderBrush" Value="#FFE8EAF0" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Padding" Value="18,6" />
+    </Style>
+
+    <Style TargetType="ToggleButton" x:Key="VerdictToggle">
+        <Setter Property="Foreground" Value="{StaticResource Fg}" />
+        <Setter Property="Background" Value="{StaticResource PanelHi}" />
+        <Setter Property="BorderBrush" Value="{StaticResource Line}" />
+        <Setter Property="Padding" Value="12,6" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToggleButton">
+                    <Border x:Name="B" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="1" CornerRadius="0" Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" TextElement.Foreground="{TemplateBinding Foreground}">
+                            <ContentPresenter.Resources>
+                                <!-- Empty style: stops the app-wide TextBlock style from overriding the button text colour. -->
+                                <Style TargetType="TextBlock" />
+                            </ContentPresenter.Resources>
+                        </ContentPresenter>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="B" Property="BorderBrush" Value="{StaticResource FgDim}" />
+                        </Trigger>
+                        <Trigger Property="IsKeyboardFocused" Value="True">
+                            <Setter TargetName="B" Property="BorderBrush" Value="{StaticResource Accent}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="CheckBox">
+        <Setter Property="Foreground" Value="{StaticResource Fg}" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="Margin" Value="0,3,16,3" />
+        <Setter Property="Cursor" Value="Hand" />
+    </Style>
+
+    <Style TargetType="TextBox">
+        <Setter Property="Foreground" Value="{StaticResource Fg}" />
+        <Setter Property="Background" Value="#FF0D0F13" />
+        <Setter Property="BorderBrush" Value="{StaticResource Line}" />
+        <Setter Property="CaretBrush" Value="{StaticResource Fg}" />
+        <Setter Property="Padding" Value="6,4" />
+        <Setter Property="FontSize" Value="13" />
+    </Style>
+
+    <Style TargetType="ScrollViewer">
+        <Setter Property="VerticalScrollBarVisibility" Value="Auto" />
+    </Style>
+
+    <!-- Thin, flat scrollbar: no arrow buttons, square thumb that brightens on hover / drag. -->
+    <Style x:Key="FlatThumb" TargetType="Thumb">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Thumb">
+                    <Border x:Name="T" Background="#FF3A404C" />
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="T" Property="Background" Value="#FF5A6170" />
+                        </Trigger>
+                        <Trigger Property="IsDragging" Value="True">
+                            <Setter TargetName="T" Property="Background" Value="#FF8B92A3" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style TargetType="ScrollBar">
+        <Setter Property="Width" Value="6" />
+        <Setter Property="MinWidth" Value="6" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ScrollBar">
+                    <Grid Background="{TemplateBinding Background}">
+                        <Track x:Name="PART_Track" IsDirectionReversed="True">
+                            <Track.Thumb>
+                                <Thumb Style="{StaticResource FlatThumb}" MinHeight="24" />
+                            </Track.Thumb>
+                        </Track>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+</ResourceDictionary>
