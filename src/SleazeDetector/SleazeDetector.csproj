@@ -12,7 +12,7 @@
     <AssemblyName>SleazeDetector</AssemblyName>
     <RootNamespace>SleazeDetector</RootNamespace>
     <Product>Marathon Sleaze Detector</Product>
-    <Version>0.9.3</Version>
+    <Version>0.9.4</Version>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>
     <!-- Program.Main (Velopack's hooks must run before WPF starts), not the Main generated from App.xaml. -->

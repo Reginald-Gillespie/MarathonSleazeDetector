@@ -28,6 +28,7 @@ public sealed class ReputationService
         _settings = settings;
         _http.DefaultRequestHeaders.Add("User-Agent", $"MarathonSleazeDetector/{AppVersion.Display}");
         _reports = LoadReports();
+        if (Untag(_reports)) SaveReports();
         ClaimUnowned();
         Account.Changed += OnAccountChanged;
         if (Account.SignedIn) _ = LoadMyWeightAsync();
@@ -423,6 +424,21 @@ public sealed class ReputationService
         }
         catch (Exception ex) { Log.Error("Could not read reports", ex); }
         return new();
+    }
+
+    /// <summary>
+    /// Ratings saved under a key with a tag ("NAME#1234") move to the name alone (see NameTools.RunnerKey). Where one
+    /// account rated the same name more than once that way, the newest rating is kept, as the server does too.
+    /// </summary>
+    internal static bool Untag(List<Report> reports)
+    {
+        if (!reports.Any(r => r.TargetKey.Contains('#'))) return false;
+        foreach (var r in reports)
+            if (r.TargetKey.IndexOf('#') is var i and > 0) r.TargetKey = r.TargetKey[..i];
+        var keep = reports.GroupBy(r => (r.SteamId, r.TargetKey)).Select(g => g.MaxBy(r => r.UpdatedUtc)!).ToHashSet();
+        reports.RemoveAll(r => !keep.Contains(r));
+        Log.Info("Moved ratings saved under tagged keys to the name alone");
+        return true;
     }
 
     private void SaveReports()

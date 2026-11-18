@@ -25,7 +25,7 @@ public sealed class Runner
     public string Name => NameOverride ?? (Tag != null ? $"{BaseName}#{Tag}" : BaseName);
     public string Key => NameTools.RunnerKey(Name);
     /// <summary>True once all four tag digits are known, i.e. the runner can be told apart from others with the same name.</summary>
-    public bool HasTag => NameTools.RunnerKey(Name).Contains('#');
+    public bool HasTag => Tag is { } t && !t.Contains('?');
 
     public string BaseName => _spellings.Count > 0 ? Vote(_spellings.ToDictionary(kv => kv.Key, kv => (double)kv.Value)) : _proxBases.Count > 0 ? Vote(_proxBases) : "?";
 

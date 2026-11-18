@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using SleazeDetector.Core;
+using SleazeDetector.Detection;
 using SleazeDetector.Reputation;
 
 namespace SleazeDetector.Dev;
@@ -202,6 +203,34 @@ public static class RepTest
             await Settle(repC);
             Check("rook + toxic: meter bad for everyone", repC.Peek(k10)?.Trust is < 0.5, $"trust {repC.Peek(k10)?.Trust}");
             await MatchServer(repC, http, server, k10, "rook + toxic");
+
+            // 11. Tags: only prox chat shows "#1234", so ratings go by the name alone. An app from before the change
+            //     still sends and asks for the tagged key; the server files it under the name and answers either way.
+            string n11 = $"TAGGED{tag}", k11 = NameTools.RunnerKey(n11);
+            Check("tag: same key with and without the tag", NameTools.RunnerKey(n11 + "#1234") == k11 && NameTools.RunnerKey(n11 + " # 1234") == k11,
+                $"{NameTools.RunnerKey(n11 + "#1234")} vs {k11}");
+            await Put(http, server, otherToken, k11 + "#1234", Verdicts.Bad);
+            await repC.RefreshAsync(new[] { k11 });
+            Expect(repC, k11, "tag: an old app's tagged rating counts for the name", good: 0, bad: 1);
+            var old = await Totals(http, server, k11 + "#5678");
+            Check("tag: an old app asking with a tag gets the name's totals under its own key",
+                old != null && old.Key == k11 + "#5678" && Math.Abs(old.WeightedBad - 1) < 0.01, $"key {old?.Key} bad {old?.WeightedBad}");
+            await Put(http, server, otherToken, k11 + "#5678", Verdicts.Good);
+            await repC.RefreshAsync(new[] { k11 });
+            Expect(repC, k11, "tag: a second tag from the same account replaces its rating", good: 1, bad: 0);
+
+            var saved = new List<Report>
+            {
+                new() { TargetKey = k11 + "#1234", SteamId = "a", Verdict = Verdicts.Bad, UpdatedUtc = DateTime.UtcNow.AddDays(-2) },
+                new() { TargetKey = k11 + "#5678", SteamId = "a", Verdict = Verdicts.Good, UpdatedUtc = DateTime.UtcNow.AddDays(-1) },
+                new() { TargetKey = k11, SteamId = "b", Verdict = Verdicts.Bad },
+                new() { TargetKey = "OTHER", SteamId = "a", Verdict = Verdicts.Bad },
+            };
+            ReputationService.Untag(saved);
+            Check("tag: saved ratings move to the name, newest kept per account",
+                saved.Count == 3 && saved.All(r => !r.TargetKey.Contains('#'))
+                && saved.Single(r => r.SteamId == "a" && r.TargetKey == k11).Verdict == Verdicts.Good,
+                string.Join(", ", saved.Select(r => $"{r.SteamId}:{r.TargetKey}:{r.Verdict}")));
         }
         catch (Exception ex) { _fails++; Out.Add("CRASH " + ex); }
         Out.Add(_fails == 0 ? "ALL PASSED" : $"{_fails} FAILED");

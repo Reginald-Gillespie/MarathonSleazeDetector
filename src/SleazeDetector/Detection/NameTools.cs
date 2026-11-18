@@ -98,8 +98,8 @@ public static class NameTools
     }
 
     /// <summary>
-    /// Prox chat shows "NAME#1234". The tag is what tells the many CHRISes apart, so it is part of a runner's identity.
-    /// OCR reads it badly ('#' becomes 1/i/t/r, digits become letters), so the tail is decoded as "#" plus four
+    /// Prox chat shows "NAME#1234". Within a run the tag tells two CHRISes in the same lobby apart; it is not part of
+    /// the rating key (see RunnerKey), because pings, the kill feed and the squad list show the name alone. OCR reads it badly ('#' becomes 1/i/t/r, digits become letters), so the tail is decoded as "#" plus four
     /// digits with look-alike letters mapped to digits. Positions that can't be decoded are '?', and the runner's
     /// tag is then voted per digit across many reads.
     /// </summary>
@@ -154,14 +154,16 @@ public static class NameTools
         return diff >= 2;
     }
 
-    /// <summary>Reputation key: look-alike-folded base name plus the exact tag digits ("0UAR12W01F#0816").</summary>
+    /// <summary>
+    /// Reputation key: the look-alike-folded name without the tag ("0UAR12W01F" for "QUARTZWOLF#0816"). Only prox chat
+    /// shows the tag, so a key that included it would not match the same runner seen in a ping or the kill feed. Two
+    /// runners with the same name share one rating.
+    /// </summary>
     public static string RunnerKey(string name)
     {
         // Only an explicit '#' marks a tag here; the "last five characters" guess is for raw prox reads only.
         int i = name.IndexOf('#');
-        var (b, tail) = i >= 3 ? SplitTag(name) : (name, null);
-        var tag = tail == null ? null : DecodeTag(tail);
-        return tag != null && !tag.Contains('?') ? $"{MatchKey(b)}#{tag}" : MatchKey(b);
+        return MatchKey(i >= 3 ? SplitTag(name).Base : name);
     }
 
     private static readonly string[] BotKeys = Core.AppSettings.DefaultIgnoredNames.Select(MatchKey).ToArray();

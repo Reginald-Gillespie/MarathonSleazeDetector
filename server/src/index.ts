@@ -42,6 +42,8 @@ export interface Env {
 interface RateLimit { limit(o: { key: string }): Promise<{ success: boolean }> }
 
 const KEY = /^[A-Z0-9*]{1,40}(#[0-9]{4})?$/;
+/** Ratings go by the name alone: only prox chat shows the "#1234" tag, so it is dropped (apps before 0.9.4 send it). */
+const baseKey = (k: string) => k.replace(/#[0-9]{4}$/, "");
 const APP_SESSION_DAYS = 180, ADMIN_SESSION_HOURS = 12;
 const now = () => Math.floor(Date.now() / 1000);
 
@@ -56,6 +58,11 @@ export default {
   },
 
   async scheduled(_c: ScheduledController, env: Env): Promise<void> {
+    // Runners with ratings but no totals (ratings moved to another key by a migration) get their totals made here.
+    const { results } = await env.DB.prepare(
+      "SELECT DISTINCT r.target_key FROM reports r LEFT JOIN scores s ON s.target_key = r.target_key WHERE s.target_key IS NULL")
+      .all<{ target_key: string }>();
+    if (results.length) await recompute(env, results.map(r => r.target_key));
     await publishSnapshot(env);
     await env.DB.prepare("DELETE FROM logins WHERE expires_at < ?").bind(now()).run();
     await env.DB.prepare("DELETE FROM sessions WHERE expires_at < ?").bind(now()).run();
@@ -219,11 +226,13 @@ const SCORE_COLUMNS = `target_key AS key, target_name AS name, good, bad, toxic,
   w_rook_bad AS weightedRookBad, w_rook_good AS weightedRookGood, updated_at AS updatedAt`;
 
 async function reputation(url: URL, env: Env): Promise<Response> {
-  const keys = [...new Set((url.searchParams.get("keys") ?? "").split(",").map(k => k.trim()).filter(k => KEY.test(k)))].slice(0, 100);
-  if (keys.length === 0) return json([]);
+  const asked = [...new Set((url.searchParams.get("keys") ?? "").split(",").map(k => k.trim()).filter(k => KEY.test(k)))].slice(0, 100);
+  if (asked.length === 0) return json([]);
+  const keys = [...new Set(asked.map(baseKey))];
   const { results } = await env.DB.prepare(`SELECT ${SCORE_COLUMNS} FROM scores WHERE target_key IN (${keys.map(() => "?").join(",")})`)
-    .bind(...keys).all();
-  return json(results);
+    .bind(...keys).all<Record<string, unknown>>();
+  // Each answer carries the key as asked, so an app that asked for "NAME#1234" finds it.
+  return json(asked.flatMap(k => results.filter(r => r.key === baseKey(k)).map(r => ({ ...r, key: k }))));
 }
 
 async function changes(url: URL, env: Env): Promise<Response> {
@@ -242,6 +251,7 @@ async function putReport(req: Request, env: Env, key: string): Promise<Response>
   if (!u) return json({ error: "not signed in" }, 401);
   if (u.banned) return json({ error: "banned" }, 403);
   if (!KEY.test(key)) return json({ error: "bad runner key" }, 400);
+  key = baseKey(key);
   const raw = await req.text();
   if (raw.length > 4096) return json({ error: "too large" }, 413);
   let b: ReportBody;
@@ -283,6 +293,7 @@ async function deleteReport(req: Request, env: Env, key: string): Promise<Respon
   const u = await sessionUser(req, env, "app");
   if (!u) return json({ error: "not signed in" }, 401);
   if (!KEY.test(key)) return json({ error: "bad runner key" }, 400);
+  key = baseKey(key);
   await env.DB.prepare("DELETE FROM reports WHERE rater_id = ? AND target_key = ?").bind(u.id, key).run();
   await recompute(env, [key]);
   return json(await afterWrite(env, u, key));
@@ -438,7 +449,7 @@ async function adminApi(req: Request, env: Env, url: URL): Promise<Response> {
   }
 
   if (p === "/runner" && req.method === "GET") {
-    const key = (url.searchParams.get("key") ?? "").trim().toUpperCase();
+    const key = baseKey((url.searchParams.get("key") ?? "").trim().toUpperCase());
     const score = await env.DB.prepare(`SELECT ${SCORE_COLUMNS} FROM scores WHERE target_key = ?`).bind(key).first();
     const ratings = (await env.DB.prepare(
       `SELECT r.rater_id AS raterId, u.steam_id AS steamId, u.persona, u.role, u.banned, r.target_name AS targetName, r.verdict,

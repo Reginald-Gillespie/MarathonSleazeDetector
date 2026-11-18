@@ -17,7 +17,7 @@ namespace SleazeDetector.UI;
 public sealed class RateByNameWindow : Window
 {
     // The server accepts letters and digits (look-alike letters folded) plus an optional four-digit tag.
-    private static readonly Regex KeyShape = new(@"^[A-Z0-9*]{2,40}(#[0-9]{4})?$");
+    private static readonly Regex KeyShape = new(@"^[A-Z0-9*]{2,40}$");
 
     private readonly ReputationService _rep;
     private readonly TextBox _name = new() { FontSize = 15, Padding = new Thickness(4, 3, 4, 3) };
@@ -54,8 +54,8 @@ public sealed class RateByNameWindow : Window
 
         p.Children.Add(new TextBlock
         {
-            Text = "Type their full name as the game shows it, with the #1234 tag if they have one: a name with a tag and " +
-                   "the same name without one are different runners.",
+            Text = "Type their name as the game shows it. The #1234 tag from proximity chat is optional: ratings go by " +
+                   "the name alone, so NAME and NAME#1234 are the same runner.",
             Style = (Style)res["Label"], FontSize = 12, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 0, 0, 8),
         });
         var row = new DockPanel();
@@ -99,7 +99,7 @@ public sealed class RateByNameWindow : Window
         int hash = name.IndexOf('#');
         if (hash >= 0 && !Regex.IsMatch(name[(hash + 1)..], @"^[0-9]{4}$")) return "The tag after # is four digits, like NAME#1234.";
         if (hash >= 0 && hash < 3) return "The name before the tag needs at least three characters.";
-        if (!KeyShape.IsMatch(NameTools.RunnerKey(name))) return "Names are letters and digits (and an optional #1234 tag), 2 to 40 characters.";
+        if (!KeyShape.IsMatch(NameTools.RunnerKey(name))) return "Names are letters and digits, 2 to 40 characters (plus an optional #1234 tag).";
         return null;
     }
 
