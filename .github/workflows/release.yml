@@ -61,10 +61,14 @@ jobs:
             --publish --releaseName "Marathon Sleaze Detector ${{ steps.ver.outputs.version }}" `
             --tag ${{ github.ref_name }} @pre
 
-      # Only the installer is distributed; vpk always builds a portable zip too.
-      - name: Remove the portable zip
+      # Only the installer and the update files stay. vpk always adds a portable zip, and RELEASES, an update index in
+      # the older Squirrel format that this app does not read (it uses releases.win.json).
+      - name: Remove the portable zip and the old-format update index
         shell: pwsh
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release delete-asset ${{ github.ref_name }} SleazeDetector-win-Portable.zip --repo ${{ github.repository }} --yes
+        run: |
+          foreach ($f in 'SleazeDetector-win-Portable.zip', 'RELEASES') {
+            gh release delete-asset ${{ github.ref_name }} $f --repo ${{ github.repository }} --yes
+          }
         continue-on-error: true
