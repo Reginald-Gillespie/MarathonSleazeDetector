@@ -56,7 +56,7 @@ jobs:
       - name: Upload release
         shell: pwsh
         run: |
-          $pre = if ('${{ github.ref_name }}'.Contains('-')) { '--pre' } else { '' }
+          $pre = @(if ('${{ github.ref_name }}'.Contains('-')) { '--pre' })
           vpk upload github --repoUrl https://github.com/${{ github.repository }} --token ${{ secrets.GITHUB_TOKEN }} `
             --publish --releaseName "Marathon Sleaze Detector ${{ steps.ver.outputs.version }}" `
-            --tag ${{ github.ref_name }} $pre
+            --tag ${{ github.ref_name }} @pre

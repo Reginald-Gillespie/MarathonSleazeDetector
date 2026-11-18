@@ -54,6 +54,7 @@ If you believe something is incorrect, DM me on discord (username: `wk0a`) or fi
 - This app is in very early stages of development.
 - Very similar usernames could be collapsed into the same user. This will be handled once this problem arises.
 - See the issues tab for more.
+- Some characters cannot be processed, for example Chinese names. These are lower priority and require rebuilding the ML model used for name recognition.
 
 <!-- 
 <p align="center"><img src="assets/divider.svg" width="100%" alt=""></p>
