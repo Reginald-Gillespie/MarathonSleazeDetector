@@ -32,7 +32,18 @@ public sealed class AppSettings
     public bool StartWithWindows { get; set; } = true;
 
     /// <summary>In-game things that show up like runner names (pings, feed) but are not players. Never tracked or rated.</summary>
-    public List<string> IgnoredNames { get; set; } = new() { "UESC GHOST" };
+    public List<string> IgnoredNames { get; set; } = DefaultIgnoredNames.ToList();
+
+    /// <summary>
+    /// Bots that show up in the kill feed and in pings. Names starting with "UESC" are bots anyway
+    /// (NameTools.IsBot); the list also catches a ping that shows only part of one ("GRENADIER" with the
+    /// "UESC" hidden under an icon).
+    /// </summary>
+    public static readonly string[] DefaultIgnoredNames =
+    {
+        "UESC RECRUIT", "UESC BREACH RECRUIT", "UESC ASSAULT TROOPER", "UESC ASSAULT CMDR", "UESC GRENADIER",
+        "UESC GRENADIER CMDR", "UESC GHOST", "UESC GHOST CMDR", "UESC TURRET", "UESC WRAITH WARDEN", "UESC CMDR",
+    };
     /// <summary>Dev mode never touches the Windows startup entry and enables the video-player test source.</summary>
     public bool DevMode { get; set; }
     public bool ShowZoneOutlines { get; set; }
@@ -103,6 +114,9 @@ public sealed class AppSettings
                     }
                     foreach (var dz in DefaultZones())
                         if (s.GetZone(dz.Name) == null) s.Zones.Add(dz);
+                    // Bots added to the list in a later version reach settings saved by an earlier one.
+                    foreach (var n in DefaultIgnoredNames)
+                        if (!s.IgnoredNames.Contains(n, StringComparer.OrdinalIgnoreCase)) s.IgnoredNames.Add(n);
                     return s;
                 }
             }

@@ -53,6 +53,7 @@ public static class NameTools
         while (parts.Count > 1 && parts[0].Length <= 2) parts.RemoveAt(0);          // badge / icon glyph
         while (parts.Count > 1 && parts[^1].Length == 1) parts.RemoveAt(parts.Count - 1);
         if (parts.Count == 0 || parts.Count > 4) return null;
+        if (IsBot(parts)) return null;
         if (hudFilter && parts.Any(p => p.Length >= 5 && IsHudWord(p))) return null; // "DEPLOYS", "PINGED"...
         var s = string.Join(' ', parts);
         if (s.Length < 3 || s.Length > 40) return null;
@@ -161,6 +162,21 @@ public static class NameTools
         var (b, tail) = i >= 3 ? SplitTag(name) : (name, null);
         var tag = tail == null ? null : DecodeTag(tail);
         return tag != null && !tag.Contains('?') ? $"{MatchKey(b)}#{tag}" : MatchKey(b);
+    }
+
+    private static readonly string BotKey = MatchKey("UESC"), BotKeySwapped = MatchKey("USEC");
+
+    /// <summary>
+    /// Every bot is named with the UESC prefix ("UESC RECRUIT", "UESC GHOST CMDR"), so a name whose first word is
+    /// UESC is a bot whatever follows: also one misread letter of it ("USEC", "UE5C"), the prefix alone (the rest
+    /// cut off) and the prefix run into the next word ("UESCIASSAULT", the gap read as a letter).
+    /// </summary>
+    public static bool IsBot(IReadOnlyList<string> parts)
+    {
+        if (parts.Count == 0) return false;
+        var first = MatchKey(parts[0]);
+        if (first.Length == 4 && (first == BotKeySwapped || Levenshtein(first, BotKey) <= 1)) return true;
+        return parts.Count == 1 && first.Length >= 8 && first.StartsWith(BotKey);
     }
 
     /// <summary>In-game things that can be pinged or appear in the feed but are not runners ("UESC GHOST").</summary>
