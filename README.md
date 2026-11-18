@@ -15,7 +15,7 @@ Marathon Sleaze Detector is designed for Bungie's extraction shooter Marathon. T
 <p align="center"><img src="assets/divider.svg" width="100%" alt=""></p>
 
 ### Install
-1. Download the latest installer [here](https://github.com/Reginald-Gillespie/MarathonSleazeDetector/releases).
+1. Download `SleazeDetector-win-Setup.exe` from [here](https://github.com/Reginald-Gillespie/MarathonSleazeDetector/releases).
 2. Run the installer. 
 3. Sign in with Steam to rate users.
 
