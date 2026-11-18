@@ -116,6 +116,9 @@ public static class UiPreview
         var lines = new List<string>();
         foreach (var t in new[] { "quartzwolf", "QuartzWolf#0816", "quartzwolf # 0816", "QW#12", "ab#1234", "a", "", "MOSS HOLLOW", "BRINE-DIVER", typed })
             lines.Add($"'{t}' -> {RateByNameWindow.Problem(t, out var n) ?? "ok"} | {n} | key {NameTools.RunnerKey(n)}");
+        foreach (var t in new[] { "UESC RECRUIT", "UESCIRECRUIT", "UESC GRENAOIER", "USEC GHOST CMDR", "UESC WRAITH WARDEN",
+                                  "UESC FAN", "UESC", "UESCLORD", "QUARTZWOLF", "RECRUIT", "GHOSTLY", "UESC TROOPERS" })
+            lines.Add($"bot check '{t}' -> {(NameTools.CleanName(NameTools.Words(t), hudFilter: false) is { } n ? "runner " + n : "not a runner")}");
         File.WriteAllLines(Path.ChangeExtension(outFile, ".txt"), lines);
         var win = new RateByNameWindow(rep);
         var box = (TextBox)typeof(RateByNameWindow).GetField("_name", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!.GetValue(win)!;

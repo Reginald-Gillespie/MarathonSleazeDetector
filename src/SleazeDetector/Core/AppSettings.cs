@@ -35,9 +35,8 @@ public sealed class AppSettings
     public List<string> IgnoredNames { get; set; } = DefaultIgnoredNames.ToList();
 
     /// <summary>
-    /// Bots that show up in the kill feed and in pings. Names starting with "UESC" are bots anyway
-    /// (NameTools.IsBot); the list also catches a ping that shows only part of one ("GRENADIER" with the
-    /// "UESC" hidden under an icon).
+    /// Bots that show up in the kill feed and in pings; they never become runners (NameTools.IsKnownBot). On ping
+    /// lines a single word of one also counts ("GRENADIER" with the "UESC" hidden under an icon).
     /// </summary>
     public static readonly string[] DefaultIgnoredNames =
     {

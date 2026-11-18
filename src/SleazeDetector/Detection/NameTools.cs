@@ -53,7 +53,7 @@ public static class NameTools
         while (parts.Count > 1 && parts[0].Length <= 2) parts.RemoveAt(0);          // badge / icon glyph
         while (parts.Count > 1 && parts[^1].Length == 1) parts.RemoveAt(parts.Count - 1);
         if (parts.Count == 0 || parts.Count > 4) return null;
-        if (IsBot(parts)) return null;
+        if (IsKnownBot(string.Join(' ', parts))) return null;
         if (hudFilter && parts.Any(p => p.Length >= 5 && IsHudWord(p))) return null; // "DEPLOYS", "PINGED"...
         var s = string.Join(' ', parts);
         if (s.Length < 3 || s.Length > 40) return null;
@@ -164,19 +164,20 @@ public static class NameTools
         return tag != null && !tag.Contains('?') ? $"{MatchKey(b)}#{tag}" : MatchKey(b);
     }
 
-    private static readonly string BotKey = MatchKey("UESC"), BotKeySwapped = MatchKey("USEC");
+    private static readonly string[] BotKeys = Core.AppSettings.DefaultIgnoredNames.Select(MatchKey).ToArray();
 
     /// <summary>
-    /// Every bot is named with the UESC prefix ("UESC RECRUIT", "UESC GHOST CMDR"), so a name whose first word is
-    /// UESC is a bot whatever follows: also one misread letter of it ("USEC", "UE5C"), the prefix alone (the rest
-    /// cut off) and the prefix run into the next word ("UESCIASSAULT", the gap read as a letter).
+    /// One of the known bots (Core.AppSettings.DefaultIgnoredNames), also misread by a letter or two or with the gap
+    /// after "UESC" read as a letter ("UESCIRECRUIT"). Only these exact bot names: a player can call themselves
+    /// "UESC" anything, so the prefix alone is not enough.
     /// </summary>
-    public static bool IsBot(IReadOnlyList<string> parts)
+    public static bool IsKnownBot(string name)
     {
-        if (parts.Count == 0) return false;
-        var first = MatchKey(parts[0]);
-        if (first.Length == 4 && (first == BotKeySwapped || Levenshtein(first, BotKey) <= 1)) return true;
-        return parts.Count == 1 && first.Length >= 8 && first.StartsWith(BotKey);
+        var k = MatchKey(name);
+        foreach (var bk in BotKeys)
+            if (k == bk || (bk.Length >= 5 && Math.Abs(k.Length - bk.Length) <= 2 && Levenshtein(k, bk) <= Math.Max(1, bk.Length / 5)))
+                return true;
+        return false;
     }
 
     /// <summary>In-game things that can be pinged or appear in the feed but are not runners ("UESC GHOST").</summary>
