@@ -1,7 +1,7 @@
 # Builds and publishes a GitHub release for every version tag:
 #   git tag v0.9.1 && git push origin v0.9.1            stable release
 #   git tag v0.9.2-preview && git push origin v0.9.2-preview   pre-release (preview channel)
-# The release carries the Velopack installer (SleazeDetector-win-Setup.exe), a portable zip, and the update packages
+# The release carries the Velopack installer (SleazeDetector-win-Setup.exe) and the update packages
 # that installed copies download automatically (see src/SleazeDetector/Core/UpdateService.cs).
 name: release
 
@@ -60,3 +60,11 @@ jobs:
           vpk upload github --repoUrl https://github.com/${{ github.repository }} --token ${{ secrets.GITHUB_TOKEN }} `
             --publish --releaseName "Marathon Sleaze Detector ${{ steps.ver.outputs.version }}" `
             --tag ${{ github.ref_name }} @pre
+
+      # Only the installer is distributed; vpk always builds a portable zip too.
+      - name: Remove the portable zip
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release delete-asset ${{ github.ref_name }} SleazeDetector-win-Portable.zip --repo ${{ github.repository }} --yes
+        continue-on-error: true
