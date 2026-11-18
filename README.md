@@ -2,7 +2,7 @@
 
 # Marathon Sleaze Detector
 
-Marathon Sleaze Detector lets you remember runners who backstabbed you and view which runners backstabbed others in the past to make sure you don't fall for the same runners again. This project displays a crowdsourced trust metric next to each username in the ping, kill, or prox feed letting you know whether you should trust a runner before agreeing to team up.
+Marathon Sleaze Detector is designed for Bungie's extraction shooter Marathon. This software lets you remember runners who backstabbed you and view which runners backstabbed others in the past to make sure you don't fall for the same runners again. This project displays a crowdsourced trust metric next to each username in the ping, kill, or prox feed letting you know whether you should trust a runner before agreeing to team up.
 
 <!-- Example image -->
 <p align="center">
